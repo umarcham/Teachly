@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/logos/learning_10051578.png">
+    <link rel="icon" type="image/png" href="../assets/img/logos/learning_10051578.png">
+    <title>Teachly — AskTeach AI</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
+    <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+    <!-- Mermaid & P5 -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+
+    <style>
+        /* Chat Specific Styles */
+        .chat-container {
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        /* User Message */
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #e91e63 0%, #ec407a 100%);
+            color: white;
+            border-radius: 16px 16px 4px 16px;
+            box-shadow: 0 4px 6px rgba(233, 30, 99, 0.2);
+        }
+
+        /* Bot Message */
+        .message.bot .message-bubble {
+            background: white;
+            color: #344767;
+            border-radius: 16px 16px 16px 4px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-size: cover;
+            flex-shrink: 0;
+            background-color: #eee;
+        }
+
+        .message.bot .icon {
+            background-image: url('../assets/img/logos/learning_10051578.png');
+        }
+
+        .message.user .icon {
+            background-image: url('https://ui-avatars.com/api/?name=User&background=344767&color=fff');
+        }
+
+        .chat-input-area {
+            position: relative;
+        }
+
+        /* Simulation Panel - Slide Over */
+        #simulation-panel {
+            position: fixed;
+            top: 0;
+            right: -45vw;
+            width: 45vw;
+            height: 100vh;
+            background: white;
+            z-index: 1050;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #simulation-panel.open {
+            right: 0;
+        }
+
+        .sim-header {
+            padding: 20px;
+            background: #344767;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sim-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .sim-content {
+            flex: 1;
+            padding: 0;
+            position: relative;
+        }
+
+        /* Sim Launcher Card */
+        .sim-launcher {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f0f2f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sim-launcher:hover {
+            background: #e0e7ff;
+            border-color: #c7d2fe;
+        }
+    </style>
+    <!-- Mermaid JS -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        });
+    </script>
+</head>
+
+<body class="g-sidenav-show bg-gray-100">
+    <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-radius-lg fixed-start ms-2 bg-white my-2"
+        id="sidenav-main">
+        <div class="sidenav-header">
+            <i class="fas fa-times p-3 cursor-pointer text-dark opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
+                id="iconSidenav"></i>
+            <a class="navbar-brand px-4 py-3 m-0" href="#">
+                <img src="../assets/img/logos/learning_10051578.png" class="navbar-brand-img" width="36" height="36"
+                    alt="main_logo">
+                <span class="ms-1 text-sm text-dark">Teachly</span>
+            </a>
+        </div>
+        <hr class="horizontal dark mt-0 mb-2">
+        <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link text-dark" href="../pages/dashboard.html"><i
+                            class="material-symbols-rounded opacity-5">dashboard</i><span
+                            class="nav-link-text ms-1">Dashboard</span></a></li>
+                <li class="nav-item"><a class="nav-link text-dark" href="/realtime"><i
+                            class="material-symbols-rounded opacity-5">record_voice_over</i><span
+                            class="nav-link-text ms-1">AI Agents</span></a></li>
+                <li class="nav-item"><a class="nav-link text-dark" href="/"><i
+                            class="material-symbols-rounded opacity-5">view_in_ar</i><span
+                            class="nav-link-text ms-1">Lecture Generator</span></a></li>
+                <li class="nav-item"><a class="nav-link active bg-gradient-primary text-white" href="#"><i
+                            class="material-symbols-rounded opacity-5">chat</i><span class="nav-link-text ms-1">AskTeach
+                            AI</span></a></li>
+                <li class="nav-item"><a class="nav-link text-dark" href="/code_explainer"><i
+                            class="material-symbols-rounded opacity-5">code</i><span class="nav-link-text ms-1">Code
+                            Explainer</span></a></li>
+                <li class="nav-item"><a class="nav-link text-dark" href="/whiteboard"><i
+                            class="material-symbols-rounded opacity-5">edit_note</i><span
+                            class="nav-link-text ms-1">Whiteboard Engine</span></a></li>
+            </ul>
+        </div>
+        <div class="sidenav-footer position-absolute w-100 bottom-0">
+            <div class="mx-3"><a class="btn bg-gradient-dark w-100" href="#" type="button">Upgrade to Pro</a></div>
+        </div>
+    </aside>
+
+    <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+        <!-- Navbar -->
+        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur"
+            data-scroll="true">
+            <div class="container-fluid py-1 px-3">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6">
+                        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a>
+                        </li>
+                        <li class="breadcrumb-item text-sm text-dark active" aria-current="page">AskTeach AI</li>
+                    </ol>
+                </nav>
+                <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+                    <ul class="navbar-nav ms-auto justify-content-end">
+                        <li class="nav-item px-3 d-flex align-items-center"><a href="javascript:;"
+                                class="nav-link text-body p-0"><i
+                                    class="material-symbols-rounded fixed-plugin-button-nav">settings</i></a></li>
+                        <li class="nav-item d-xl-none ps-3 d-flex align-items-center"><a href="javascript:;"
+                                class="nav-link text-body p-0" id="iconNavbarSidenav">
+                                <div class="sidenav-toggler-inner"><i class="sidenav-toggler-line"></i><i
+                                        class="sidenav-toggler-line"></i><i class="sidenav-toggler-line"></i></div>
+                            </a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid py-2">
+            <div class="row min-vh-80">
+                <!-- CHAT COLUMN (Wider Focus) -->
+                <div class="col-lg-9 col-md-12 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">AskTeach AI Tutor</h6>
+                                <p class="text-sm mb-0">Personalized Learning Assistant</p>
+                            </div>
+                            <span class="badge bg-gradient-success">Online</span>
+                        </div>
+                        <div class="card-body d-flex flex-column pt-3" style="height: calc(100vh - 170px);">
+                            <div id="chat-messages" class="chat-container flex-grow-1 mb-3">
+                                <!-- Messages will appear here -->
+                                <div class="message bot">
+                                    <div class="icon"></div>
+                                    <div class="message-bubble">Hello! I'm Teachly. How can I help you learn today?
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chat-input-area d-flex gap-2">
+                                <div class="input-group input-group-outline w-100">
+                                    <input type="text" id="chat-input" class="form-control"
+                                        placeholder="Ask anything..." autocomplete="off">
+                                </div>
+                                <button class="btn bg-gradient-primary mb-0" id="chat-send">
+                                    <i class="material-symbols-rounded">send</i>
+                                </button>
+                                <button class="btn btn-outline-secondary mb-0 p-2" onclick="clearChat()"
+                                    title="Clear Chat">
+                                    <i class="material-symbols-rounded">delete</i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDEBAR: Profile & Core Actions -->
+                <div class="col-lg-3 d-none d-lg-block" style="max-height: 85vh; overflow-y: auto;">
+                    <!-- Elaborated Profile Summary -->
+                    <div class="card mb-4">
+                        <div class="card-header pb-0 text-center">
+                            <div class="avatar avatar-xl bg-gradient-warning rounded-circle shadow-sm mb-2">
+                                <span class="text-white font-weight-bold text-lg">S</span>
+                            </div>
+                            <h5 class="mb-0 font-weight-bold" id="profile-name">Sufyan</h5>
+                            <p class="text-xs text-secondary font-weight-bold mb-0" id="profile-level">Intermediate
+                                Learner</p>
+                        </div>
+                        <div class="card-body p-3">
+                            <hr class="horizontal dark my-2">
+
+                            <!-- Learning Streak -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-sm font-weight-bold text-dark">🔥 Day Streak</span>
+                                <span class="badge bg-gradient-danger">12 Days</span>
+                            </div>
+
+                            <!-- Subject Progress -->
+                            <h6 class="text-xs text-uppercase text-secondary font-weight-bolder opacity-7 mb-2">Subject
+                                Mastery</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-xs font-weight-bold">Programming</span>
+                                    <span class="text-xs font-weight-bold">70%</span>
+                                </div>
+                                <div class="progress progress-md mb-2">
+                                    <div class="progress-bar bg-gradient-info w-70" role="progressbar"
+                                        aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-xs font-weight-bold">Physics</span>
+                                    <span class="text-xs font-weight-bold">45%</span>
+                                </div>
+                                <div class="progress progress-md">
+                                    <div class="progress-bar bg-gradient-success w-45" role="progressbar"
+                                        aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+
+                            <hr class="horizontal dark my-2">
+
+                            <!-- Preferences -->
+                            <h6 class="text-xs text-uppercase text-secondary font-weight-bolder opacity-7 mb-2">Learning
+                                Style</h6>
+                            <div class="d-flex gap-1 flex-wrap mb-2">
+                                <span class="badge bg-light text-dark border" id="stat-visual">Visual (Text+Diag)</span>
+                                <span class="badge bg-light text-dark border" id="stat-cognitive">Active</span>
+                                <span class="badge bg-light text-dark border">Medium Pace</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Prompts -->
+                    <div class="card mb-3">
+                        <div class="card-header pb-2 pt-2">
+                            <h6 class="mb-0 text-sm">Actions</h6>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="row g-1">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-primary w-100 btn-xs mb-0"
+                                        onclick="setInput('Explain:')">Explain</button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-info w-100 btn-xs mb-0"
+                                        onclick="setInput('Quiz me:')">Quiz</button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-warning w-100 btn-xs mb-0"
+                                        onclick="setInput('Summarize:')">Summary</button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success w-100 btn-xs mb-0"
+                                        onclick="setInput('Debug:')">Debug</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Side Panel for P5 -->
+    <aside id="simulation-panel">
+        <div class="sim-header">
+            <div class="sim-title font-weight-bold">Interactive Simulation ✨</div>
+            <button class="sim-close" onclick="closePopup()">&times;</button>
+        </div>
+        <div class="sim-content">
+            <div id="active-sim-container" style="height:100%;">
+                <div class="d-flex align-items-center justify-content-center h-100 text-secondary text-sm">Waiting for
+                    code...</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- JS Logic (Preserved) -->
+    <script>
+        function setInput(txt) {
+            const input = document.getElementById('chat-input');
+            input.value = txt + " ";
+            input.focus();
+        }
+
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+        window.renderMermaid = async () => { await mermaid.run({ querySelector: '.mermaid' }); };
+
+        // ==========================================
+        // 1. TEACHLY SCHEMA & STATE
+        // ==========================================
+        const defaultProfile = {
+            userId: "user_" + Date.now(),
+            name: "Sufyan",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            learningLevel: { math: { level: "beginner", confidenceScore: 0.5 }, programming: { level: "intermediate", confidenceScore: 0.7 } },
+            stylePreferences: {
+                contentStyle: { prefersText: true, prefersDiagrams: true },
+                cognitiveStyle: { primary: "active" },
+                difficultyStyle: { preferredDifficulty: "intermediate" },
+                languageStyle: { language: "hinglish" },
+                personalityTone: { mainTone: "supportive" },
+                reasoningPreference: "example-first",
+                outputPreference: "explain+practice",
+                pace: "medium"
+            },
+            currentFocus: "Programming"
+        };
+
+        function loadChatHistory() {
+            const saved = localStorage.getItem('askteach_chat_history');
+            if (saved) {
+                const messages = JSON.parse(saved);
+                messages.forEach(msg => appendMessage(msg.text, msg.sender, false));
+            }
+        }
+        function clearChat() {
+            if (confirm("Clear conversation history?")) {
+                localStorage.removeItem('askteach_chat_history');
+                location.reload();
+            }
+        }
+        function loadProfile() {
+            const stored = localStorage.getItem('teachly_profile_v2');
+            if (stored) return JSON.parse(stored);
+            localStorage.setItem('teachly_profile_v2', JSON.stringify(defaultProfile));
+            return defaultProfile;
+        }
+        // MOVED INIT TO BOTTOM
+
+        // ==========================================
+        // 2. UI RENDERING 
+        // ==========================================
+        function renderProfileUI() {
+            document.getElementById('profile-name').textContent = userProfile.name || "Student";
+            const focus = userProfile.currentFocus || "General";
+            const focusKey = focus.toLowerCase();
+            let levelText = "Beginner";
+            if (userProfile.learningLevel && userProfile.learningLevel[focusKey]) levelText = userProfile.learningLevel[focusKey].level;
+            else levelText = userProfile.stylePreferences.difficultyStyle.preferredDifficulty;
+            document.getElementById('profile-level').textContent = capitalize(levelText);
+            renderLearningStyleSummary(userProfile);
+        }
+
+        function renderLearningStyleSummary(profile) {
+            const diffEl = document.getElementById('chip-diff');
+            if (diffEl) diffEl.textContent = capitalize(profile.stylePreferences.difficultyStyle.preferredDifficulty);
+
+            const paceEl = document.getElementById('chip-pace');
+            if (paceEl) paceEl.textContent = capitalize(profile.stylePreferences.pace);
+
+            const focusEl = document.getElementById('chip-focus');
+            if (focusEl) focusEl.textContent = capitalize(profile.currentFocus || "General");
+
+            const content = profile.stylePreferences.contentStyle;
+            const visEl = document.getElementById('stat-visual');
+            if (visEl) visEl.textContent = content.prefersDiagrams ? "Text + Diagrams" : "Text Only";
+
+            const cogEl = document.getElementById('stat-cognitive');
+            if (cogEl) cogEl.textContent = capitalize(profile.stylePreferences.cognitiveStyle.primary);
+
+            const list = document.getElementById('recommendation-list');
+            if (list) {
+                list.innerHTML = "";
+                const recs = getLearningRecommendations(profile);
+                recs.forEach(r => {
+                    const li = document.createElement('li');
+                    li.className = "list-group-item border-0 px-0 mb-2 bg-gray-100 border-radius-lg ps-2"; // Styled list item
+                    li.textContent = "💡 " + r;
+                    list.appendChild(li);
+                });
+
+                const updatedEl = document.getElementById('summary-updated');
+                if (updatedEl) updatedEl.textContent = "Updated " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+
+        function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
+
+        function getLearningRecommendations(profile) {
+            const recs = [];
+            const p = profile.stylePreferences;
+            if (p.contentStyle.prefersDiagrams) recs.push("Visuals will be used.");
+            if (p.pace === "slow") recs.push("Pace set to detailed/slow.");
+            else if (p.pace === "fast") recs.push("Pace set to fast/concise.");
+            if (p.reasoningPreference === "example-first") recs.push("Practical examples first.");
+            if (recs.length === 0) recs.push("Start chatting to customize!");
+            return recs.slice(0, 3);
+        }
+
+        function updateProfileFromMessage(profile, userMessage) {
+            const msg = userMessage.toLowerCase();
+            let changed = false;
+            if (msg.includes("hindi")) { profile.stylePreferences.languageStyle.language = "hindi"; changed = true; }
+            if (msg.includes("english")) { profile.stylePreferences.languageStyle.language = "english"; changed = true; }
+            if (msg.includes("slow")) { profile.stylePreferences.pace = "slow"; changed = true; }
+            else if (msg.includes("fast")) { profile.stylePreferences.pace = "fast"; changed = true; }
+            if (changed) saveProfile(profile);
+        }
+
+        function saveProfile(p) {
+            p.updatedAt = new Date().toISOString();
+            localStorage.setItem('teachly_profile_v2', JSON.stringify(p));
+            renderProfileUI();
+        }
+        // ==========================================
+        // 3. CHAT LOGIC (With Mermaid Support)
+        // ==========================================
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chat-send');
+
+        function appendMessage(text, sender, save = true) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            if (sender === 'bot') {
+                const icon = document.createElement('div');
+                icon.classList.add('icon');
+                msgDiv.appendChild(icon);
+            }
+            const bubble = document.createElement('div');
+            bubble.classList.add('message-bubble');
+            bubble.innerHTML = text;
+            msgDiv.appendChild(bubble);
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto scroll
+
+            if (save) {
+                let history = JSON.parse(localStorage.getItem('askteach_chat_history') || '[]');
+                history.push({ text, sender });
+                localStorage.setItem('askteach_chat_history', JSON.stringify(history));
+            }
+        }
+
+        // Global Animation Runner
+        window.runAnimation = function (codeId) {
+            const codeBox = document.getElementById(codeId);
+            if (!codeBox) return;
+            let code = codeBox.value || codeBox.textContent;
+            code = code.replace(/<br\s*\/?>/gi, '\n');
+            const txt = document.createElement("textarea"); txt.innerHTML = code; code = txt.value; // Decode
+            try { const f = new Function(code); f(); } catch (e) { console.error("Anim Error:", e); alert("Animation error."); }
+        };
+
+        // ==========================================
+        // 4. ANIMATION & SIDE PANEL LOGIC
+        // ==========================================
+        window.simCache = {};
+        let currentP5Instance = null;
+
+        window.openSimulation = function (id) {
+            const code = window.simCache[id];
+            if (!code) { alert("Code not found!"); return; }
+            const panel = document.getElementById('simulation-panel');
+            panel.classList.add('open');
+            setTimeout(() => { runP5Instance(code, 'active-sim-container'); }, 300);
+        };
+
+        window.closePopup = function () {
+            const panel = document.getElementById('simulation-panel');
+            panel.classList.remove('open');
+            const container = document.getElementById('active-sim-container');
+            container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-secondary text-sm">Waiting for code...</div>';
+            if (currentP5Instance) { currentP5Instance.remove(); currentP5Instance = null; }
+        };
+
+        window.runP5Instance = function (codeString, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            let code = codeString || "";
+            code = code.replace(/```javascript/g, '').replace(/```/g, '').trim();
+            // Force dynamic size
+            code = code.replace(/createCanvas\s*\([^)]+\)/, 'createCanvas(window.innerWidth, window.innerHeight)');
+            const htmlContent = `
+                <!DOCTYPE html><html><head><meta charset="utf-8">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"><\/script>
+                <style>body{margin:0;padding:0;overflow:hidden;background:#fff;height:100%;width:100%;}canvas{display:block;}</style>
+                </head><body><script>
+                window.onerror = function(msg) { document.body.innerHTML = '<div style="color:red;padding:20px;">Error: '+msg+'</div>'; };
+                const code = \`${code.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
+                try {
+                    if (code.includes('new p5')) { const s = document.createElement('script'); s.textContent = code; document.body.appendChild(s); }
+                    else if (code.includes('p.setup') || code.includes('p.createCanvas')) {
+                        new p5(function(p) { try { const f = new Function('p', code); f(p); } catch(err) { console.error(err); } });
+                    } else { const s = document.createElement('script'); s.textContent = code; document.body.appendChild(s); }
+                } catch(e) { document.body.innerHTML = '<div style="color:red;">Runtime Error: '+e.message+'</div>'; }
+                <\/script></body></html>`;
+            container.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = "width:100%; height:100%; border:none;";
+            iframe.srcdoc = htmlContent;
+            container.appendChild(iframe);
+        };
+
+        async function handleSend() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            appendMessage(text, 'user');
+            chatInput.value = '';
+            updateProfileFromMessage(userProfile, text);
+
+            const loadingId = 'loading-' + Date.now();
+            appendMessage('<span id="' + loadingId + '">...</span>', 'bot', false); // false=don't save loading
+
+            try {
+                const res = await fetch('/api/askteach/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, profile: userProfile, history: [] }) // Sending empty history to save token space for now, or use loadChatHistory logic
+                });
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.closest('.message').remove();
+
+                const data = await res.json();
+                if (data.ok) {
+                    let rawReply = data.reply;
+                    const mermaidBlocks = [];
+                    rawReply = rawReply.replace(/```\s*mermaid([\s\S]*?)```/gi, (match, content) => {
+                        if (!content || content.trim().length === 0) return "";
+                        let clean = content.replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
+                        mermaidBlocks.push(`<div class="mermaid" style="background:white; padding:10px; border-radius:8px;">${clean}</div>`);
+                        return `__MERMAID_BLOCK_${mermaidBlocks.length - 1}__`;
+                    });
+                    let formattedReply = rawReply.replace(/\n/g, '<br>');
+                    mermaidBlocks.forEach((block, index) => { formattedReply = formattedReply.replace(`__MERMAID_BLOCK_${index}__`, block); });
+
+                    appendMessage(formattedReply, 'bot');
+                    setTimeout(async () => { if (window.renderMermaid) await window.renderMermaid(); }, 50);
+
+                    if (data.animation_code) {
+                        const uid = Date.now();
+                        window.simCache[uid] = data.animation_code;
+                        appendMessage(`<div class="sim-launcher" onclick="openSimulation(${uid})"><span class="sim-icon">🚀</span><span style="font-weight:600;">Launch Simulation</span></div>`, 'bot');
+                    }
+                    if (data.updates) updateLocalProfileDeep(data.updates);
+                } else {
+                    appendMessage("Error: " + (data.error || "Unknown"), 'bot');
+                }
+            } catch (e) {
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.closest('.message').remove();
+
+                let errorMsg = "Server unreachable.";
+                if (window.location.protocol === 'file:') {
+                    errorMsg = "Error: You are opening this as a file. Please access via http://localhost:8000/askteach";
+                } else {
+                    console.error("Chat Error:", e);
+                    if (e.message) errorMsg += " (" + e.message + ")";
+                }
+                appendMessage(errorMsg, 'bot');
+            }
+        }
+
+        function updateLocalProfileDeep(updates) {
+            function deepMerge(target, source) {
+                for (const key in source) {
+                    if (source[key] instanceof Object && key in target) Object.assign(source[key], deepMerge(target[key], source[key]));
+                    else target[key] = source[key];
+                } return target;
+            }
+            deepMerge(userProfile, updates); saveProfile(userProfile);
+        }
+
+        chatSendBtn.addEventListener('click', handleSend);
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+
+        /* Sidenav Toggler Logic */
+        var win = navigator.platform.indexOf('Win') > -1;
+        if (win && document.querySelector('#sidenav-scrollbar')) {
+            var options = { damping: '0.5' }
+            Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+        }
+
+        // Global Mermaid Renderer
+        window.renderMermaid = async function () {
+            if (window.mermaid) {
+                try {
+                    await mermaid.run({
+                        nodes: document.querySelectorAll('.mermaid')
+                    });
+                } catch (e) { console.error("Mermaid Error:", e); }
+            }
+        };
+
+        // ==========================================
+        // 5. INITIALIZATION
+        // ==========================================
+        // Initialize Profile
+        const userProfile = loadProfile();
+
+        // Render Initial UI
+        renderProfileUI();
+
+        // Load Chat History (after DOM elements defined)
+        loadChatHistory();
+    </script>
+    <script src="../assets/js/core/popper.min.js"></script>
+    <script src="../assets/js/core/bootstrap.min.js"></script>
+    <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+    <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+    <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
+</body>
+
+</html>

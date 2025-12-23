@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="{{ url_for('static', filename='img/logos/learning_10051578.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logos/learning_10051578.png') }}">
+  <title>Teachly by IBH — Lecture Generator</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
+  <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
+  <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
+  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+
+  <style>
+    /* Minor polish to fit your theme */
+    .presenter-card {
+      cursor: pointer;
+      transition: transform .08s ease, box-shadow .2s;
+    }
+
+    .presenter-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .12);
+    }
+
+    .presenter-card.selected {
+      outline: 2px solid var(--bs-primary, #344767);
+    }
+
+    .presenter-thumb {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #111;
+      border-radius: .5rem;
+    }
+
+    .muted {
+      color: #7b809a;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-right: 6px;
+      background: #9e9e9e;
+    }
+
+    .status-pending {
+      background: #f59e0b !important;
+    }
+
+    .status-ok {
+      background: #28a745 !important;
+    }
+
+    .status-bad {
+      background: #ef5350 !important;
+    }
+
+    .code-pill {
+      padding: .25rem .5rem;
+      border-radius: 999px;
+      border: 1px solid #e9ecef;
+      color: #7b809a;
+      font-size: .75rem;
+    }
+
+    .h-160 {
+      min-height: 160px;
+    }
+
+    .minh-120 {
+      min-height: 120px;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+
+    /* Dropzone container */
+    .dropzone {
+      border: 2px dashed #d2d6e0;
+      background: #fafbff;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      transition: border-color .2s, background .2s;
+    }
+
+    .dropzone.dragover {
+      border-color: #344767;
+      /* theme primary */
+      background: #f2f6ff;
+    }
+
+    .dropzone .dz-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #eef2ff;
+      color: #344767;
+      margin-bottom: 10px;
+    }
+
+    .dropzone .dz-title {
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .dropzone .dz-sub {
+      color: #7b809a;
+      font-size: 0.875rem;
+      margin: 4px 0 10px;
+    }
+
+    .dropzone .dz-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .dropzone .dz-chip {
+      font-size: .75rem;
+      color: #7b809a;
+      background: #f6f7fb;
+      border: 1px solid #e9ecf5;
+      border-radius: 999px;
+      padding: 4px 8px;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .progress-lite {
+      height: 8px;
+      background: #eef2ff;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-lite>span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #344767, #7aa5ff);
+      transition: width .35s ease;
+    }
+
+    /* Right card spacing tidy */
+    .right-card .form-label {
+      font-size: .9rem;
+      color: #6b7280;
+    }
+
+    .right-card .hint {
+      color: #7b809a;
+      font-size: .8rem;
+    }
+
+    .btn-light {
+      background: #f8f9fc;
+      border-color: #e9ecf5 !important;
+    }
+
+    .btn-light:hover {
+      background: #f2f4fa;
+    }
+
+    .form-select {
+      padding-left: 0.75rem !important;
+      /* default is ~0.5rem */
+    }
+
+    /* Custom Video Player */
+    .video-clipper {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      background: #000;
+      border-radius: 0.75rem;
+      /* matches border-radius-lg */
+    }
+
+    #player {
+      width: 100%;
+      display: block;
+      transform: scale(1.15);
+      /* Increased zoom to fully remove watermark */
+      transform-origin: center center;
+      transition: opacity 0.3s;
+    }
+
+    .custom-controls {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      /* Dark glass */
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s;
+      display: flex;
+      /* Ensure alignment */
+      align-items: center;
+      /* Vertically center */
+      gap: 12px;
+      /* Spacing */
+    }
+
+    .video-clipper:hover .custom-controls {
+      opacity: 1;
+    }
+
+    #subtitleOverlay {
+      position: absolute;
+      bottom: 70px;
+      /* Shifted up slightly */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      text-align: center;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.5);
+      /* Dark background for text readability */
+      padding: 6px 12px;
+      border-radius: 6px;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.3s;
+      line-height: 1.4;
+    }
+
+    .btn-play {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: none;
+      padding: 0;
+      transition: background 0.2s;
+    }
+
+    .btn-play:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .time-display {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      /* White text */
+      min-width: 80px;
+      text-align: center;
+      font-feature-settings: "tnum";
+    }
+
+    input[type=range].custom-range {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+
+    input[type=range].custom-range:focus {
+      outline: none;
+    }
+
+    input[type=range].custom-range::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: #e9ecef;
+      border-radius: 999px;
+    }
+
+    input[type=range].custom-range::-webkit-slider-thumb {
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: #344767;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -4px;
+    }
+  </style>
+</head>
+
+<body class="g-sidenav-show bg-gray-100">
+  <!-- Sidenav (your original) -->
+  <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-radius-lg fixed-start ms-2 bg-white my-2"
+    id="sidenav-main">
+    <div class="sidenav-header">
+      <i class="fas fa-times p-3 cursor-pointer text-dark opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
+        id="iconSidenav"></i>
+      <a class="navbar-brand px-4 py-3 m-0" href="#">
+        <img src="{{ url_for('static', filename='img/logos/learning_10051578.png') }}" class="navbar-brand-img" width="36" height="36"
+          alt="main_logo">
+        <span class="ms-1 text-sm text-dark">Teachly</span>
+      </a>
+    </div>
+    <hr class="horizontal dark mt-0 mb-2">
+    <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link text-dark" href="../pages/dashboard.html"><i
+              class="material-symbols-rounded opacity-5">dashboard</i><span
+              class="nav-link-text ms-1">Dashboard</span></a></li>
+        <li class="nav-item"><a class="nav-link text-dark" href="/realtime"><i
+              class="material-symbols-rounded opacity-5">record_voice_over</i><span class="nav-link-text ms-1">AI Agents
+            </span></a></li>
+        <li class="nav-item"><a class="nav-link text-dark" href="../pages/billing.html"><i
+              class="material-symbols-rounded opacity-5">receipt_long</i><span
+              class="nav-link-text ms-1">Billing</span></a></li>
+        <li class="nav-item"><a class="nav-link active bg-gradient-dark text-white" href="#"><i
+              class="material-symbols-rounded opacity-5">view_in_ar</i><span class="nav-link-text ms-1">Lecture
+              Generator</span></a></li>
+        <li class="nav-item"><a class="nav-link text-dark" href="/whiteboard"><i
+              class="material-symbols-rounded opacity-5 me-2">edit_note</i>
+            <span class="nav-link-text">Whiteboard Engine</span></a></li>
+        <li class="nav-item"><a class="nav-link text-dark" href="#"><i
+              class="material-symbols-rounded opacity-5">notifications</i><span
+              class="nav-link-text ms-1">Notifications</span></a></li>
+        <li class="nav-item mt-3">
+          <h6 class="ps-4 ms-2 text-uppercase text-xs text-dark font-weight-bolder opacity-5">Account pages</h6>
+        </li>
+        <li class="nav-item"><a class="nav-link text-dark" href="#"><i
+              class="material-symbols-rounded opacity-5">person</i><span class="nav-link-text ms-1">Profile</span></a>
+        </li>
+        <li class="nav-item"><a class="nav-link text-dark" href="../pages/sign-in.html"><i
+              class="material-symbols-rounded opacity-5">login</i><span class="nav-link-text ms-1">Sign In</span></a>
+        </li>
+        <li class="nav-item"><a class="nav-link text-dark" href="../pages/sign-up.html"><i
+              class="material-symbols-rounded opacity-5">assignment</i><span class="nav-link-text ms-1">Sign
+              Up</span></a></li>
+      </ul>
+    </div>
+    <div class="sidenav-footer position-absolute w-100 bottom-0">
+      <div class="mx-3"><a class="btn bg-gradient-dark w-100" href="#" type="button">Upgrade to pro</a></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+    <!-- Top navbar -->
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur"
+      data-scroll="true">
+      <div class="container-fluid py-1 px-3">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6">
+            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+            <li class="breadcrumb-item text-sm text-dark active">Lecture Generator</li>
+          </ol>
+        </nav>
+        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+            <div class="input-group input-group-outline">
+              <label class="form-label">Type here...</label>
+              <input type="text" class="form-control" disabled>
+            </div>
+          </div>
+          <ul class="navbar-nav d-flex align-items-center justify-content-end">
+            <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+              <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
+                <div class="sidenav-toggler-inner"><i class="sidenav-toggler-line"></i><i
+                    class="sidenav-toggler-line"></i><i class="sidenav-toggler-line"></i></div>
+              </a>
+            </li>
+            <li class="nav-item px-3 d-flex align-items-center"><a href="javascript:;" class="nav-link text-body p-0"><i
+                  class="material-symbols-rounded fixed-plugin-button-nav">settings</i></a></li>
+            <li class="nav-item d-flex align-items-center"><a href="../pages/sign-in.html"
+                class="nav-link text-body font-weight-bold px-0"><i
+                  class="material-symbols-rounded">account_circle</i></a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid py-3">
+      <div class="row">
+        <!-- Presenters -->
+        <div class="col-lg-5 mb-3">
+          <div class="card">
+            <div class="card-header pb-0">
+              <div class="d-flex align-items-center justify-content-between">
+                <h6>Choose Presenter</h6>
+                <span class="code-pill">Premium+ Clips</span>
+              </div>
+              <div class="input-group input-group-outline mt-3">
+                <label class="form-label">Search presenters (name/id)…</label>
+                <input id="search" type="text" class="form-control">
+              </div>
+            </div>
+            <div class="card-body pt-3">
+              <div id="presenters" class="row"></div>
+              <div class="text-sm text-secondary mt-2" id="presenterCount"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF → Script + Create -->
+        <div class="col-lg-7 mb-3">
+          <div class="card h-100">
+            <div class="card-header pb-0">
+              <h6 class="mb-0">Create Lecture</h6>
+              <p class="text-sm text-secondary mb-0">Upload PDF → Gemini simplifies → Generate full-body avatar</p>
+            </div>
+            <div class="card-body right-card">
+
+              <!-- Dropzone container -->
+              <div id="pdfDropzone" class="dropzone mb-3">
+                <div class="dz-icon">
+                  <span class="material-symbols-rounded">picture_as_pdf</span>
+                </div>
+                <p class="dz-title">Upload your lesson PDF</p>
+                <p class="dz-sub">Drag & drop here, or choose a file</p>
+                <div class="dz-actions">
+                  <input id="pdfInput" type="file" accept="application/pdf" class="d-none">
+
+                  <label for="pdfInput"
+                    class="btn btn-light w-100 d-flex align-items-center justify-content-center gap-2 border">
+                    <span class="material-symbols-rounded">file_upload</span>
+                    <span>Upload PDF</span>
+                  </label>
+
+                  <small id="fileNote" class="text-secondary d-block mt-1"></small>
+
+                  <span class="dz-chip"><span class="material-symbols-rounded" style="font-size:16px">lock</span>
+                    processed server-side</span>
+                  <span class="dz-chip"><span class="material-symbols-rounded"
+                      style="font-size:16px">auto_awesome</span> simplified by Gemini</span>
+                </div>
+
+                <div class="mt-3 d-none" id="dzMeta">
+                  <div class="text-xs text-secondary mb-1" id="dzFileName"></div>
+                  <div class="progress-lite"><span id="dzProgressBar"></span></div>
+                </div>
+              </div>
+
+              <!-- Voice & aspect -->
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <label class="form-label">Voice (Microsoft)</label>
+                  <div class="d-flex gap-2">
+                    <select id="voice" class="form-select">
+                      <option value="">Auto</option>
+                    </select>
+
+                  </div>
+                  <small id="voiceMeta" class="text-secondary d-block mt-1"></small>
+
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label">Aspect Ratio</label>
+                  <select id="ratio" class="form-select">
+                    <option value="">Auto</option>
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                    <option value="1:1">1:1</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Subtitle Row -->
+              <div class="row mt-2">
+                <div class="col-12">
+                  <label class="form-label">Subtitles (Overlay)</label>
+                  <select id="subtitleLang" class="form-select" disabled>
+                    <option value="">Off</option>
+                    <option value="English">English</option>
+                    <option value="Kannada">Kannada</option>
+                    <option value="Arabic">Arabic</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="French">French</option>
+                    <option value="Urdu">Urdu</option>
+                  </select>
+                  <small class="text-xs text-secondary">Enable after generation</small>
+                </div>
+              </div>
+
+              <!-- Extract & simplify -->
+              <div class="d-flex align-items-center gap-2 mt-3">
+                <button id="extractBtn" class="btn bg-gradient-dark">Extract & Simplify</button>
+                <span id="statusMsg" class="text-sm text-secondary"></span>
+                <span class="status-dot" id="dot"></span>
+              </div>
+
+              <!-- Text area -->
+              <div class="mt-3">
+                <label class="form-label">Narration Text</label>
+                <textarea id="text" class="form-control" rows="6"
+                  placeholder="Text will appear here after extraction. You can edit before generating."></textarea>
+                <div class="hint mt-1">Tip: keep 60–90 seconds per clip for best results.</div>
+              </div>
+
+              <!-- Create -->
+              <div class="d-flex align-items-center gap-2 mt-3">
+                <button id="createBtn" class="btn bg-gradient-dark">Create Clip</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="row mt-3">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header pb-0 d-flex align-items-center justify-content-between">
+              <h6 class="mb-0">Output</h6>
+              <a id="downloadBtn" class="btn btn-outline-dark btn-sm d-none" href="#" download>Download MP4</a>
+            </div>
+            <div class="card-body">
+              <div class="text-sm text-secondary mb-2" id="clipStatus"><span class="status-dot" id="dotx"></span> Idle
+              </div>
+              <div class="row">
+                <div class="col-lg-8 mb-3">
+                  <div class="video-clipper border-radius-lg">
+                    <div id="subtitleOverlay"></div>
+                    <video id="player" playsinline></video>
+                    <!-- Custom Controls (moved inside) -->
+                    <div class="custom-controls d-flex align-items-center gap-3">
+                      <button id="playBtn" class="btn-play">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">play_arrow</span>
+                      </button>
+                      <input type="range" id="progressBar" class="custom-range" value="0" min="0" max="100" step="0.1">
+                      <div class="time-display"><span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+                      </div>
+                      <button id="fsBtn" class="btn-play" style="background: transparent; color: #344767;">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">fullscreen</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Core JS (Material Dashboard) -->
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
+
+  <!-- Page JS -->
+  <script>
+    // Elements
+    const presentersEl = document.getElementById('presenters');
+    const presenterCount = document.getElementById('presenterCount');
+    const searchEl = document.getElementById('search');
+    const pdfInput = document.getElementById('pdfInput');
+    const extractBtn = document.getElementById('extractBtn');
+    const textEl = document.getElementById('text');
+    const voiceEl = document.getElementById('voice');
+    const ratioEl = document.getElementById('ratio');
+    const createBtn = document.getElementById('createBtn');
+    const statusMsg = document.getElementById('statusMsg');
+    const dot = document.getElementById('dot');
+    const clipStatus = document.getElementById('clipStatus');
+    const player = document.getElementById('player');
+    // const resultUrl = document.getElementById('resultUrl'); // Removed
+    const downloadBtn = document.getElementById('downloadBtn');
+    const dotx = document.getElementById('dotx');
+
+    // Custom Controls Elements
+    const playBtn = document.getElementById('playBtn');
+    const fsBtn = document.getElementById('fsBtn');
+    const progressBar = document.getElementById('progressBar');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const playIcon = playBtn.querySelector('span');
+
+    let presenters = [];
+    let selected = null;
+    let lastClipId = null;
+    let pollTimer = null;
+
+    function setDot(el, state) {
+      el.classList.remove('status-ok', 'status-bad', 'status-pending');
+      if (state === 'ok') el.classList.add('status-ok');
+      if (state === 'bad') el.classList.add('status-bad');
+      if (state === 'pending') el.classList.add('status-pending');
+    }
+
+    function presenterCard(p) {
+      const col = document.createElement('div');
+      col.className = 'col-md-6 col-xl-4 mb-3';
+
+      const card = document.createElement('div');
+      // Check both presenter_id and id for selection matching
+      const pId = p.presenter_id || p.id;
+      const sId = selected ? (selected.presenter_id || selected.id) : null;
+
+      card.className = 'card presenter-card ' + (sId === pId ? 'selected' : '');
+      card.onclick = () => { selected = p; renderPresenters(); };
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+
+      const img = document.createElement('img');
+      img.className = 'presenter-thumb mb-3';
+      img.src = p.thumbnail_url || p.preview_image || '';
+      img.alt = p.name || p.title || 'Presenter';
+
+      const title = document.createElement('h6');
+      title.className = 'mb-1';
+      title.textContent = p.name || p.title || 'Presenter';
+
+      const pid = document.createElement('div');
+      pid.className = 'text-xs text-secondary';
+      pid.style.wordBreak = 'break-all';
+      pid.textContent = p.presenter_id || p.id;
+
+      body.appendChild(img);
+      body.appendChild(title);
+      body.appendChild(pid);
+      card.appendChild(body);
+      col.appendChild(card);
+      return col;
+    }
+
+    function renderPresenters() {
+      const needle = (searchEl.value || '').toLowerCase();
+      presentersEl.innerHTML = '';
+      presenters
+        .filter(p => (p.name || p.title || p.presenter_id || '').toLowerCase().includes(needle))
+        .forEach(p => presentersEl.appendChild(presenterCard(p)));
+      presenterCount.textContent = `${presenters.length} presenters • click to select`;
+    }
+
+    async function loadPresenters() {
+      statusMsg.textContent = 'Loading presenters…';
+      setDot(dot, 'pending');
+
+      try {
+        // 1. Fetch User Avatars
+        let userAvatars = [];
+        try {
+          const res = await fetch('/api/user-avatars');
+          const data = await res.json();
+          if (data.ok && data.avatars) {
+            userAvatars = data.avatars.map(a => ({ ...a, is_custom: true }));
+          }
+        } catch (e) {
+          console.error("Failed to fetch user avatars", e);
+        }
+
+        // 2. Fetch API Presenters
+        const res = await fetch('/api/presenters');
+        const data = await res.json();
+        if (!data.ok) {
+          statusMsg.textContent = 'Error: ' + data.error;
+          setDot(dot, 'bad');
+          return;
+        }
+
+        // 3. Merge: User avatars first
+        const apiPresenters = data.presenters || [];
+        presenters = [...userAvatars, ...apiPresenters];
+
+        if (!selected && presenters.length) selected = presenters[0];
+        renderPresenters();
+        statusMsg.textContent = 'Presenters loaded.';
+        setDot(dot, 'ok');
+      } catch (e) {
+        console.error(e);
+        statusMsg.textContent = 'Error loading presenters.';
+        setDot(dot, 'bad');
+      }
+    }
+
+    // PDF → Gemini
+    extractBtn.onclick = async () => {
+      if (!pdfInput.files.length) { alert('Please upload a PDF first.'); return; }
+      const form = new FormData();
+      form.append('file', pdfInput.files[0]);
+      statusMsg.textContent = 'Extracting & simplifying with Gemini…';
+      setDot(dot, 'pending');
+
+      const res = await fetch('/api/pdf-to-script', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.ok) {
+        statusMsg.textContent = 'Error: ' + data.error;
+        setDot(dot, 'bad');
+        return;
+      }
+      textEl.value = data.script;
+      statusMsg.textContent = 'Script ready. You can edit before generating.';
+      setDot(dot, 'ok');
+    };
+
+    // Create Clip
+    createBtn.onclick = async () => {
+      if (!selected) { alert('Select a presenter first.'); return; }
+      const text = (textEl.value || '').trim();
+      if (!text) { alert('Please add narration text.'); return; }
+
+      setDot(dotx, 'pending');
+      clipStatus.innerHTML = '<span class="status-dot status-pending"></span> Creating…';
+      statusMsg.textContent = 'Creating clip…';
+      setDot(dotx, 'pending');
+      clipStatus.innerHTML = '<span class="status-dot status-pending"></span> Creating…';
+      statusMsg.textContent = 'Creating clip…';
+      statusMsg.textContent = 'Creating clip…';
+      player.removeAttribute('src'); player.load();
+      resetControls(); // Reset custom controls
+      /* resultUrl.textContent = ''; */ downloadBtn.classList.add('d-none'); lastClipId = null;
+
+      const body = {
+        presenter_id: selected.is_custom ? null : selected.presenter_id,
+        source_url: selected.image_url, // Always pass image_url, backend will use it if presenter_id is null
+        text,
+        voice_id: (voiceEl.value || '').trim() || undefined,
+        aspect_ratio: (ratioEl.value || '') || undefined
+      };
+
+      const res = await fetch('/api/clip', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        statusMsg.textContent = 'Create error: ' + data.error;
+        setDot(dotx, 'bad');
+        clipStatus.innerHTML = '<span class="status-dot status-bad"></span> Error';
+        return;
+      }
+      lastClipId = data.clip.id;
+      statusMsg.textContent = 'Rendering…';
+      pollStatus();
+    };
+
+    async function pollStatus() {
+      if (!lastClipId) return;
+      const res = await fetch(`/api/clip/${lastClipId}`);
+      const data = await res.json();
+      if (!data.ok) {
+        statusMsg.textContent = 'Status error: ' + data.error;
+        setDot(dotx, 'bad');
+        clipStatus.innerHTML = '<span class="status-dot status-bad"></span> Error';
+        return;
+      }
+      const info = data.clip;
+      clipStatus.innerHTML = `<span class="status-dot status-pending"></span> ${info.status}`;
+      if (info.status === 'done') {
+        setDot(dotx, 'ok');
+        setDot(dotx, 'ok');
+        player.src = info.result_url;
+        player.load();
+        // player.play(); // Optional: Auto-play
+        // resultUrl.textContent = info.result_url;
+
+        // ✅ Updated line for subtitles:
+        const scriptText = document.getElementById("text").value;
+        downloadBtn.href = `/api/download/${lastClipId}?text=${encodeURIComponent(scriptText)}`;
+
+        downloadBtn.classList.remove('d-none');
+        document.getElementById('subtitleLang').disabled = false; // Enable subtitles
+        statusMsg.textContent = 'Done.';
+        return;
+      }
+
+      if (info.status === 'error' || info.status === 'failed') {
+        setDot(dotx, 'bad');
+        statusMsg.textContent = 'Render failed.';
+        return;
+      }
+      pollTimer = setTimeout(pollStatus, 2000);
+    }
+
+    // Events
+    searchEl.oninput = renderPresenters;
+
+    // Init
+    loadPresenters();
+
+    const voiceSelect = document.getElementById('voice');
+    const voiceMeta = document.getElementById('voiceMeta');
+    let VOICE_LIST = [];
+
+    async function loadVoices() {
+      voiceMeta.textContent = 'Loading voices…';
+      // keep Auto option; only append new ones
+      try {
+        const res = await fetch('/api/voices');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed');
+
+        VOICE_LIST = data.voices || [];
+        // remove existing non-empty options
+        [...voiceSelect.options].forEach(opt => { if (opt.value) opt.remove(); });
+
+        if (!VOICE_LIST.length) {
+          voiceMeta.textContent = 'No voices from API; using Auto.';
+          return;
+        }
+
+        VOICE_LIST.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.voice_id;
+          opt.textContent = [v.name || v.voice_id, v.locale, v.gender].filter(Boolean).join(' • ');
+          opt.dataset.preview = v.preview_url || '';
+          voiceSelect.appendChild(opt);
+        });
+        voiceMeta.textContent = `${VOICE_LIST.length} voices ready`;
+      } catch (e) {
+        console.error(e);
+        voiceMeta.innerHTML = `Could not load voices. <button id="reloadVoices" class="btn btn-link p-0">Retry</button>`;
+        document.getElementById('reloadVoices').onclick = loadVoices;
+      }
+    }
+
+
+
+
+    // Call once on page load
+    loadVoices();
+
+    // --- Subtitle Logic ---
+    const subtitleLang = document.getElementById('subtitleLang');
+    const subtitleOverlay = document.getElementById('subtitleOverlay');
+    let currentSubtitles = [];
+
+    subtitleLang.onchange = async () => {
+      const lang = subtitleLang.value;
+      if (!lang) {
+        subtitleOverlay.style.opacity = 0;
+        return;
+      }
+
+      // Fetch Translation
+      subtitleOverlay.textContent = "Translating...";
+      subtitleOverlay.style.opacity = 1;
+
+      try {
+        const textToTranslate = textEl.value;
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          body: JSON.stringify({ text: textToTranslate, target_language: lang }),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.ok) {
+          // HEURISTIC SPLIT
+          const sentences = data.translation.match(/[^.!?]+[.!?]*/g) || [data.translation];
+          const totalDuration = player.duration || 10;
+          const charCount = data.translation.length;
+
+          currentSubtitles = sentences.map(s => {
+            // proportional duration
+            const dur = (s.length / charCount) * totalDuration;
+            return { text: s.trim(), duration: dur };
+          });
+
+          // Start Sync (update immediately)
+          updateSubtitleDisplay();
+        } else {
+          subtitleOverlay.textContent = "Translation failed.";
+        }
+      } catch (e) {
+        console.error(e);
+        subtitleOverlay.textContent = "Error.";
+      }
+    };
+
+    player.ontimeupdate = updateSubtitleDisplay;
+
+    function updateSubtitleDisplay() {
+      if (!currentSubtitles.length || subtitleLang.value === "") return;
+      const t = player.currentTime;
+      let elapsed = 0;
+      let textToShow = "";
+
+      for (let sub of currentSubtitles) {
+        if (t >= elapsed && t < elapsed + sub.duration) {
+          textToShow = sub.text;
+          break;
+        }
+        elapsed += sub.duration;
+      }
+      subtitleOverlay.textContent = textToShow;
+    }
+
+  </script>
+
+  <script>
+    // --- Dropzone wiring ---
+    const dz = document.getElementById('pdfDropzone');
+    const chooseFileBtn = document.getElementById('chooseFileBtn');
+    const pdfInputEl = document.getElementById('pdfInput');
+    const dzMeta = document.getElementById('dzMeta');
+    const dzFileName = document.getElementById('dzFileName');
+    const dzProgressBar = document.getElementById('dzProgressBar');
+
+    // Visual states
+    ['dragenter', 'dragover'].forEach(evt => {
+      dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); });
+    });
+
+    dz.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      if (files && files[0]) {
+        pdfInputEl.files = files;  // populate hidden input
+        showDzMeta(files[0]);
+      }
+    });
+
+    chooseFileBtn.addEventListener('click', () => pdfInputEl.click());
+    pdfInputEl.addEventListener('change', () => {
+      if (pdfInputEl.files && pdfInputEl.files[0]) showDzMeta(pdfInputEl.files[0]);
+    });
+
+    function showDzMeta(file) {
+      dzMeta.classList.remove('d-none');
+      dzFileName.textContent = `${file.name} • ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      setProgress(0);
+    }
+    function setProgress(p) { dzProgressBar.style.width = `${p}%`; }
+
+    // Override your existing extract handler to animate progress lightly
+    const originalExtract = document.getElementById('extractBtn').onclick;
+    document.getElementById('extractBtn').onclick = async () => {
+      const pdfInput = pdfInputEl; // use our hidden input
+      if (!pdfInput.files.length) { alert('Please add a PDF (drop or choose).'); return; }
+
+      // optimistic progress animation while server works
+      let prog = 5; setProgress(prog);
+      const fake = setInterval(() => { if (prog < 85) { prog += 3; setProgress(prog); } }, 250);
+
+      // call your existing endpoint
+      const form = new FormData();
+      form.append("file", pdfInput.files[0]);
+      const res = await fetch("/api/pdf-to-script", { method: "POST", body: form });
+      const data = await res.json();
+
+      clearInterval(fake);
+      setProgress(100);
+
+      if (!data.ok) {
+        document.getElementById('statusMsg').textContent = "Error: " + data.error;
+        setDot(document.getElementById('dot'), 'bad');
+        return;
+      }
+      document.getElementById('text').value = data.script;
+      document.getElementById('statusMsg').textContent = "Script prepared! Ready to generate video.";
+      setDot(document.getElementById('dot'), 'ok');
+    };
+
+    //const pdfInput = document.getElementById('pdfInput');
+    const fileNote = document.getElementById('fileNote');
+
+    pdfInput.addEventListener('change', () => {
+      if (pdfInput.files && pdfInput.files[0]) {
+        fileNote.textContent = `Selected: ${pdfInput.files[0].name} • ${(pdfInput.files[0].size / 1024 / 1024).toFixed(2)} MB`;
+      } else {
+        fileNote.textContent = '';
+      }
+    });
+
+
+
+  </script>
+
+  <script>
+    // --- Custom Video Player Logic ---
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function togglePlay() {
+      if (player.paused || player.ended) {
+        player.play();
+      } else {
+        player.pause();
+      }
+    }
+
+    function updatePlayIcon() {
+      if (player.paused || player.ended) {
+        playIcon.textContent = 'play_arrow';
+      } else {
+        playIcon.textContent = 'pause';
+      }
+    }
+
+    function resetControls() {
+      progressBar.value = 0;
+      currentTimeEl.textContent = '0:00';
+      durationEl.textContent = '0:00';
+      playIcon.textContent = 'play_arrow';
+    }
+
+    playBtn.addEventListener('click', togglePlay);
+    player.addEventListener('play', updatePlayIcon);
+    player.addEventListener('pause', updatePlayIcon);
+    player.addEventListener('ended', updatePlayIcon);
+    player.addEventListener('click', togglePlay); // Click video to toggle
+
+    player.addEventListener('timeupdate', () => {
+      if (!player.duration) return;
+      const pct = (player.currentTime / player.duration) * 100;
+      progressBar.value = pct;
+      currentTimeEl.textContent = formatTime(player.currentTime);
+    });
+
+    player.addEventListener('loadedmetadata', () => {
+      durationEl.textContent = formatTime(player.duration);
+    });
+
+    progressBar.addEventListener('input', () => {
+      if (!player.duration) return;
+      const time = (progressBar.value / 100) * player.duration;
+      player.currentTime = time;
+    });
+
+    // Fullscreen Logic
+    const clipper = document.querySelector('.video-clipper');
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        if (clipper.requestFullscreen) {
+          clipper.requestFullscreen();
+        } else if (clipper.webkitRequestFullscreen) { /* Safari */
+          clipper.webkitRequestFullscreen();
+        } else if (clipper.msRequestFullscreen) { /* IE11 */
+          clipper.msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+          document.msExitFullscreen();
+        }
+      }
+    }
+
+    fsBtn.addEventListener('click', toggleFullscreen);
+
+    // Update icon on change
+    document.addEventListener('fullscreenchange', () => {
+      const icon = fsBtn.querySelector('span');
+      icon.textContent = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+    });
+  </script>
+
+</body>
+
+</html>

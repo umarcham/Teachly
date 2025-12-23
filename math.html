@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/logos/learning_10051578.png">
+  <link rel="icon" type="image/png" href="../assets/img/logos/learning_10051578.png">
+  <title>
+    Teachly by IBH
+  </title>
+  <!--     Fonts and icons     -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
+  <!-- Nucleo Icons -->
+  <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
+  <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <!-- Material Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <!-- CSS Files -->
+  <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+</head>
+<!-- MathJax can stay async --> 
+<!-- in <head> or just before your whiteboard script -->
+  
+  <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+  <script>
+    // MathJax v3 – SVG output, we’ll typeset manually
+    window.MathJax = {
+      tex: {
+        displayMath: [['\\[','\\]']],
+        inlineMath:  [['\\(','\\)']]
+      },
+      loader: { load: ['input/tex','output/svg'] },
+      startup: {
+        typeset: false,                   // we will call typeset when needed
+        ready() {
+          MathJax.startup.defaultReady();
+          window.MJ_READY = true;         // flag for our code
+        }
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  
+  
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!window.fabric || !fabric.Text) return;
+      const orig = fabric.Text.prototype._render;
+      fabric.Text.prototype._render = function (ctx) {
+        const prev = ctx.textBaseline;
+        if (prev !== 'alphabetic') ctx.textBaseline = 'alphabetic';
+        orig.call(this, ctx);
+        ctx.textBaseline = prev || 'alphabetic';
+      };
+    });
+  </script>
+  
+    
+  <script>
+    // Silence "alphabetical" warnings from Fabric text rendering (Chrome change).
+    // Run after Fabric loads.
+    (function () {
+      if (!window.fabric) return;
+  
+      function patchRender(Cls) {
+        if (!Cls || !Cls.prototype || !Cls.prototype._render) return;
+        const orig = Cls.prototype._render;
+        Cls.prototype._render = function (ctx) {
+          const prev = ctx.textBaseline;
+          // Fabric used to set 'alphabetical', browsers now prefer 'alphabetic'
+          if (prev !== 'alphabetic') ctx.textBaseline = 'alphabetic';
+          try { return orig.call(this, ctx); }
+          finally { ctx.textBaseline = prev || 'alphabetic'; }
+        };
+      }
+  
+      patchRender(fabric.Text);
+      patchRender(fabric.Textbox);
+      patchRender(fabric.IText);
+    })();
+  </script>
+  
+      
+    
+
+    
+
+<!-- MathJax v3 (tex-svg) -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+
+
+
+  
+  
+<style>
+    .shadow-soft{ box-shadow: 0 10px 30px rgba(2,6,23,.08); border-radius: 16px; }
+.btn-outline-soft{ border:1px solid #dfe5ef; background:#fff; color:#2a2e36; border-radius:10px; }
+#latexBox mjx-container { font-size: 1.05rem; }
+/* make flex items shrink properly */
+.min-w-0 { min-width: 0; }
+
+/* keep each card from spilling */
+.card { overflow: hidden; }
+
+/* whiteboard canvas wrapper keeps a fixed aspect and contains the canvas */
+.whiteboard-card .wb-outer{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;         /* responsive height */
+  background: #fff;
+  border-radius: 0 0 12px 12px;  /* match card rounding if you like */
+}
+
+/* canvas fills the wrapper; no direct fixed height here */
+#board{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 0 0 12px 12px;
+  background: #fff;
+}
+.wb-outer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;   /* <-- Controls height automatically */
+  background: #fff;
+}
+
+#board {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+
+</style>
+
+<body class="g-sidenav-show  bg-gray-100">
+  <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-radius-lg fixed-start ms-2  bg-white my-2" id="sidenav-main">
+    <div class="sidenav-header">
+      <i class="fas fa-times p-3 cursor-pointer text-dark opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
+      <a class="navbar-brand px-4 py-3 m-0" href="#" target="_blank">
+        <img src="../assets/img/logos/learning_10051578.png" class="navbar-brand-img" width="36" height="36" alt="main_logo">
+        <span class="ms-1 text-sm text-dark">Teachly</span>
+      </a>
+    </div>
+    <hr class="horizontal dark mt-0 mb-2">
+    <div class="collapse navbar-collapse  w-auto " id="sidenav-collapse-main">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active bg-gradient-dark text-white" href="../pages/dashboard.html">
+            <i class="material-symbols-rounded opacity-5">dashboard</i>
+            <span class="nav-link-text ms-1">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="#">
+            <i class="material-symbols-rounded opacity-5">table_view</i>
+            <span class="nav-link-text ms-1">Student Reports</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="../pages/billing.html">
+            <i class="material-symbols-rounded opacity-5">receipt_long</i>
+            <span class="nav-link-text ms-1">Billing</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="../pages/lecture_generator.html">
+            <i class="material-symbols-rounded opacity-5">view_in_ar</i>
+            <span class="nav-link-text ms-1">Lecture Genrator</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="#">
+            <i class="material-symbols-rounded opacity-5">format_textdirection_r_to_l</i>
+            <span class="nav-link-text ms-1">RTL</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="#">
+            <i class="material-symbols-rounded opacity-5">notifications</i>
+            <span class="nav-link-text ms-1">Notifications</span>
+          </a>
+        </li>
+        <li class="nav-item mt-3">
+          <h6 class="ps-4 ms-2 text-uppercase text-xs text-dark font-weight-bolder opacity-5">Account pages</h6>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="#">
+            <i class="material-symbols-rounded opacity-5">person</i>
+            <span class="nav-link-text ms-1">Profile</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="../pages/sign-in.html">
+            <i class="material-symbols-rounded opacity-5">login</i>
+            <span class="nav-link-text ms-1">Sign In</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark" href="../pages/sign-up.html">
+            <i class="material-symbols-rounded opacity-5">assignment</i>
+            <span class="nav-link-text ms-1">Sign Up</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="sidenav-footer position-absolute w-100 bottom-0 ">
+      <div class="mx-3">
+        <a class="btn bg-gradient-dark w-100" href="#" type="button">Upgrade to pro</a>
+      </div>
+    </div>
+  </aside>
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    <!-- Navbar -->
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur" data-scroll="true">
+      <div class="container-fluid py-1 px-3">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Dashboard</li>
+          </ol>
+        </nav>
+        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+            <div class="input-group input-group-outline">
+              <label class="form-label">Type here...</label>
+              <input type="text" class="form-control">
+            </div>
+          </div>
+          <ul class="navbar-nav d-flex align-items-center  justify-content-end">
+           
+            <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+              <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
+                <div class="sidenav-toggler-inner">
+                  <i class="sidenav-toggler-line"></i>
+                  <i class="sidenav-toggler-line"></i>
+                  <i class="sidenav-toggler-line"></i>
+                </div>
+              </a>
+            </li>
+            <li class="nav-item px-3 d-flex align-items-center">
+              <a href="javascript:;" class="nav-link text-body p-0">
+                <i class="material-symbols-rounded fixed-plugin-button-nav">settings</i>
+              </a>
+            </li>
+            <li class="nav-item dropdown pe-3 d-flex align-items-center">
+              <a href="javascript:;" class="nav-link text-body p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="material-symbols-rounded">notifications</i>
+              </a>
+              <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
+                <li class="mb-2">
+                  <a class="dropdown-item border-radius-md" href="javascript:;">
+                    <div class="d-flex py-1">
+                      <div class="my-auto">
+                        <img src="../assets/img/team-2.jpg" class="avatar avatar-sm  me-3 ">
+                      </div>
+                      <div class="d-flex flex-column justify-content-center">
+                        <h6 class="text-sm font-weight-normal mb-1">
+                          <span class="font-weight-bold">New message</span> from Laur
+                        </h6>
+                        <p class="text-xs text-secondary mb-0">
+                          <i class="fa fa-clock me-1"></i>
+                          13 minutes ago
+                        </p>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li class="mb-2">
+                  <a class="dropdown-item border-radius-md" href="javascript:;">
+                    <div class="d-flex py-1">
+                      <div class="my-auto">
+                        <img src="../assets/img/small-logos/logo-spotify.svg" class="avatar avatar-sm bg-gradient-dark  me-3 ">
+                      </div>
+                      <div class="d-flex flex-column justify-content-center">
+                        <h6 class="text-sm font-weight-normal mb-1">
+                          <span class="font-weight-bold">New album</span> by Travis Scott
+                        </h6>
+                        <p class="text-xs text-secondary mb-0">
+                          <i class="fa fa-clock me-1"></i>
+                          1 day
+                        </p>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item border-radius-md" href="javascript:;">
+                    <div class="d-flex py-1">
+                      <div class="avatar avatar-sm bg-gradient-secondary  me-3  my-auto">
+                        <svg width="12px" height="12px" viewBox="0 0 43 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                          <title>credit-card</title>
+                          <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <g transform="translate(-2169.000000, -745.000000)" fill="#FFFFFF" fill-rule="nonzero">
+                              <g transform="translate(1716.000000, 291.000000)">
+                                <g transform="translate(453.000000, 454.000000)">
+                                  <path class="color-background" d="M43,10.7482083 L43,3.58333333 C43,1.60354167 41.3964583,0 39.4166667,0 L3.58333333,0 C1.60354167,0 0,1.60354167 0,3.58333333 L0,10.7482083 L43,10.7482083 Z" opacity="0.593633743"></path>
+                                  <path class="color-background" d="M0,16.125 L0,32.25 C0,34.2297917 1.60354167,35.8333333 3.58333333,35.8333333 L39.4166667,35.8333333 C41.3964583,35.8333333 43,34.2297917 43,32.25 L43,16.125 L0,16.125 Z M19.7083333,26.875 L7.16666667,26.875 L7.16666667,23.2916667 L19.7083333,23.2916667 L19.7083333,26.875 Z M35.8333333,26.875 L28.6666667,26.875 L28.6666667,23.2916667 L35.8333333,23.2916667 L35.8333333,26.875 Z"></path>
+                                </g>
+                              </g>
+                            </g>
+                          </g>
+                        </svg>
+                      </div>
+                      <div class="d-flex flex-column justify-content-center">
+                        <h6 class="text-sm font-weight-normal mb-1">
+                          Payment successfully completed
+                        </h6>
+                        <p class="text-xs text-secondary mb-0">
+                          <i class="fa fa-clock me-1"></i>
+                          2 days
+                        </p>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item d-flex align-items-center">
+              <a href="../pages/sign-in.html" class="nav-link text-body font-weight-bold px-0">
+                <i class="material-symbols-rounded">account_circle</i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="row g-4 align-items-start">
+      <!-- Whiteboard -->
+      <div class="col-12 col-xl-7 min-w-0">
+        <div class="card h-100 overflow-hidden shadow-soft whiteboard-card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h6 class="mb-0">Whiteboard</h6>
+            <div class="d-flex gap-2">
+              <button id="wbPen"   class="btn btn-light btn-sm">Pen</button>
+              <button id="wbErase" class="btn btn-light btn-sm">Erase</button>
+              <button id="wbClear" class="btn btn-outline-soft btn-sm">Clear</button>
+            </div>
+          </div>
+    
+          <!-- Keep the canvas inside an aspect-ratio wrapper -->
+          <div class="card-body p-0">
+            <div class="wb-outer">
+              <canvas id="board"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <!-- Steps + LaTeX -->
+      <div class="col-12 col-xl-5 min-w-0">
+        <div class="card h-100 overflow-hidden shadow-soft">
+          <div class="card-header">
+            <h6 class="mb-0">Math Steps</h6>
+          </div>
+          <div class="card-body">
+            <div class="input-group mb-3">
+              <input id="mathQuestion" type="text" class="form-control" placeholder="Ask a math question… e.g., Solve 2x+4=10">
+              <button id="askBtn" class="btn bg-gradient-dark">Ask</button>
+            </div>
+            <div id="speechLine" class="text-sm text-secondary mb-2"></div>
+            <ol id="stepsList" class="mb-3"></ol>
+            <div id="latexBox" class="p-3 rounded" style="background:#f8f9fc; min-height: 80px;"></div>
+            <div class="d-flex align-items-center mt-3">
+              <span class="text-secondary me-2">Answer:</span>
+              <code id="finalAnswer" class="fw-semibold"></code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    
+  
+    </aside>
+<!-- fix Fabric text baseline once -->
+
+<script>
+  // ---------------- Whiteboard (Fabric) ----------------
+  const BG = '#ffffff';
+
+  let board;                 // global Fabric canvas
+  let tool = 'pen';          // 'pen' | 'erase'
+
+  function setPen() {
+    tool = 'pen';
+    if (!board) return;
+    board.isDrawingMode = true;
+    const b = new fabric.PencilBrush(board);
+    b.width = 3;
+    b.color = '#111';
+    board.freeDrawingBrush = b;
+  }
+
+  function setEraser() {
+    tool = 'erase';
+    if (!board) return;
+    board.isDrawingMode = true;
+    const b = new fabric.PencilBrush(board);
+    b.width = 12;
+    b.color = BG; // fake erase by painting BG
+    board.freeDrawingBrush = b;
+  }
+
+  function clearBoard() {
+    if (!board) return;
+    board.getObjects().forEach(o => board.remove(o));
+    board.setBackgroundColor(BG, board.renderAll.bind(board));
+    setPen();
+  }
+
+  // --- sizing helpers ---
+  function _setCanvasCssHeight(canvas, cssH){
+    const el = canvas.getElement();
+    el.style.height = cssH + 'px';
+    const ratio = window.devicePixelRatio || 1;
+    canvas.setHeight(cssH * ratio);
+    canvas.setZoom(ratio);
+  }
+
+  function fitCanvasToContainer(canvas){
+    const el   = canvas.getElement();
+    const wrap = el.parentElement;
+    const ratio = window.devicePixelRatio || 1;
+    const cssW  = wrap.getBoundingClientRect().width || 800;
+    el.style.width = cssW + 'px';
+    canvas.setWidth(cssW * ratio);
+    canvas.setZoom(ratio);
+    canvas.requestRenderAll();
+  }
+
+  function autoGrowCanvas(minH = 420, pad = 24){
+    if (!board) return;
+    const zoom = board.getZoom() || 1;
+    let maxY = 0;
+    board.getObjects().forEach(o => {
+      const rect = o.getBoundingRect(true, true);
+      maxY = Math.max(maxY, (rect.top + rect.height) / zoom);
+    });
+    const need = Math.max(minH, Math.ceil(maxY + pad));
+    const el = board.getElement();
+    const currentCssH = parseFloat(getComputedStyle(el).height);
+    if (Math.abs(currentCssH - need) > 1){
+      _setCanvasCssHeight(board, need);
+      board.requestRenderAll();
+    }
+  }
+
+  function makeStatic(obj){ obj.selectable = false; obj.evented = false; }
+
+  window.addEventListener('resize', () => { if (window.board) fitCanvasToContainer(window.board); });
+
+  function initBoard() {
+    const el = document.getElementById('board');
+    const canvas = new fabric.Canvas('board', { isDrawingMode: true });
+    window.board = board = canvas;
+
+    canvas.renderOnAddRemove = true;
+    canvas.setBackgroundColor(BG, canvas.renderAll.bind(canvas));
+
+    fitCanvasToContainer(canvas);
+    _setCanvasCssHeight(canvas, 420);
+    setPen();
+
+    document.getElementById('wbPen').onclick   = setPen;
+    document.getElementById('wbErase').onclick = setEraser;
+    document.getElementById('wbClear').onclick = clearBoard;
+  }
+
+  function drawSafely(addFn) {
+    if (!board) return;
+    const prevTool = tool;
+    const wasDrawing = board.isDrawingMode;
+    board.isDrawingMode = false;
+    try { addFn(); }
+    finally {
+      if (prevTool === 'erase') setEraser(); else setPen();
+      board.isDrawingMode = wasDrawing;
+    }
+  }
+
+  // --------- Programmatic drawing helpers ----------
+  function stripDisplayDelims(s='') {
+    return s.replace(/^\\\[/,'').replace(/\\\]$/,'');
+  }
+
+  function addLatexToBoard(latex, { x = 40, y = 40 } = {}) {
+    if (!board || !latex) return;
+    if (!window.MathJax?.tex2svg) {
+      // retry until MathJax loads
+      return setTimeout(() => addLatexToBoard(latex, { x, y }), 200);
+    }
+    try {
+      const clean = stripDisplayDelims(latex);
+      const svg = MathJax.tex2svg(clean, { display: true }).querySelector("svg");
+      const svgStr = svg.outerHTML;
+
+      fabric.loadSVGFromString(svgStr, (objects, options) => {
+        const group = fabric.util.groupSVGElements(objects, options);
+        group.set({ left: x, top: y, hoverCursor: "default" });
+
+        const maxW = board.getWidth() / (board.getZoom() || 1) - 60;
+        const w = group.getScaledWidth();
+        if (w > maxW) group.scale(maxW / w);
+
+        makeStatic(group);
+        board.add(group);
+        board.renderAll();
+        autoGrowCanvas();
+      });
+    } catch (e) {
+      console.error("LaTeX render failed:", e);
+    }
+  }
+
+  function addStepsToBoard(steps, startY = 140) {
+    if (!board || !steps?.length) return;
+    let y = startY;
+    const maxW = board.getWidth() / (board.getZoom() || 1) - 60;
+    steps.forEach((text, i) => {
+      const box = new fabric.Textbox(`${i+1}. ${text}`, {
+        left: 40, top: y, width: maxW,
+        fontSize: 18, fill: "#222", lineHeight: 1.3
+      });
+      makeStatic(box);
+      board.add(box);
+      y += box.getScaledHeight() + 10;
+    });
+    board.renderAll();
+    autoGrowCanvas();
+  }
+
+  function addAnswerBadge(answer, y = 100){
+    if (!board || !answer) return;
+    drawSafely(() => {
+      const t = new fabric.Textbox(`Answer: ${answer}`, {
+        left: 40, top: y, fontSize: 22, fill: '#0d6efd', fontWeight: 'bold'
+      });
+      makeStatic(t);
+      board.add(t);
+      board.discardActiveObject();
+      board.renderAll();
+      autoGrowCanvas();
+    });
+  }
+
+  // ---------------- Right-panel UI wiring ----------------
+  const stepsList   = document.getElementById('stepsList');
+  const latexBox    = document.getElementById('latexBox');
+  const speechLine  = document.getElementById('speechLine');
+  const finalAnswer = document.getElementById('finalAnswer');
+  const askBtn      = document.getElementById('askBtn');
+  const qInput      = document.getElementById('mathQuestion');
+
+  function renderSteps(steps) {
+    stepsList.innerHTML = '';
+    (steps || []).forEach(s => {
+      const li = document.createElement('li');
+      li.textContent = s;
+      stepsList.appendChild(li);
+    });
+  }
+
+  let mjTimer = null;
+  function renderLatex(latex) {
+    latexBox.innerHTML = latex ? `\\[ ${latex} \\]` : '';
+    if (window.MathJax?.typesetPromise) {
+      if (mjTimer) clearTimeout(mjTimer);
+      mjTimer = setTimeout(() => MathJax.typesetPromise([latexBox]).catch(() => {}), 30);
+    } else if (window.MathJax?.typeset) {
+      MathJax.typeset([latexBox]);
+    }
+  }
+
+  function renderSpeech(s) { speechLine.textContent = s || ''; }
+  function renderAnswer(a)  { finalAnswer.textContent = a || ''; }
+
+  function setThinking(on) {
+    askBtn.disabled = on;
+    askBtn.textContent = on ? 'Thinking…' : 'Ask';
+  }
+
+  // ========== STEP 2: exact sync (audio + SSML marks) ==========
+  // Build a lesson (narration + board actions) from Gemini response
+  function buildLessonFromGemini(data) {
+    // narration lines (IDs become <mark name="...">)
+    const narration = [];
+    const actions = {};
+
+    if (data.speech) {
+      narration.push({ id: 'S1', text: data.speech });
+      actions['S1'] = [];
+      if (data.latex) actions['S1'].push({ type: 'latex', text: data.latex, x: 40, y: 30 });
+    }
+
+    // steps
+    (data.steps || []).forEach((s, i) => {
+      const id = `S${i + 2}`;
+      narration.push({ id, text: s });
+      actions[id] = [{ type: 'latex', text: `${i + 1}. ${s}`, x: 40, y: 120 + i * 60 }];
+    });
+
+    // final answer
+    if (data.answer) {
+      const id = `S_END`;
+      narration.push({ id, text: `The final answer is ${data.answer}.` });
+      actions[id] = [{ type: 'badge', text: `Answer: ${data.answer}`, y: 120 + (data.steps?.length || 0) * 60 + 40 }];
+    }
+
+    return {
+      voice: { languageCode: 'en-US', name: 'en-US-Neural2-C' }, // tune if you want
+      narration,
+      actions
+    };
+  }
+
+  // Ask backend to synthesize audio + marks
+  async function synthesizeLesson(lesson) {
+    const res = await fetch('/api/tts-lesson', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        voice: lesson.voice,
+        segments: lesson.narration    // [{id,text}]
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'TTS failed');
+    return data; // { audio_url, marks:[{name,timeMs}] }
+  }
+
+  function runBoardActionsForMark(markName, lesson) {
+    const list = lesson.actions[markName] || [];
+    list.forEach(act => {
+      if (act.type === 'latex')      addLatexToBoard(act.text, { x: act.x ?? 40, y: act.y ?? 40 });
+      else if (act.type === 'badge') addAnswerBadge(act.text, act.y ?? 100);
+      else if (act.type === 'steps') addStepsToBoard(act.steps, act.y ?? 140);
+    });
+  }
+
+  function playWithMarks(audioUrl, marks, lesson, { offsetMs = 0 } = {}) {
+    const audio = new Audio(audioUrl);
+    // must be called from a user gesture for autoplay policies
+    audio.play().catch(() => audio.play());
+
+    for (const m of marks) {
+      const t = Math.max(0, (m.timeMs ?? 0) + offsetMs);
+      setTimeout(() => runBoardActionsForMark(m.name, lesson), t);
+    }
+  }
+
+  async function startExactSyncedLesson(lesson, { offsetMs = 0 } = {}) {
+    clearBoard();
+    const { audio_url, marks } = await synthesizeLesson(lesson);
+    playWithMarks(audio_url, marks, lesson, { offsetMs });
+  }
+
+  // ===============================================================
+
+  async function askGemini(question) {
+    const topic = (document.getElementById('topicField')?.value || '').trim();
+    setThinking(true);
+    try {
+      const res = await fetch('/api/math-tutor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, topic })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        alert('Gemini error: ' + (data.error || 'unknown'));
+        return;
+      }
+
+      // Update right panel immediately (text)
+      renderSpeech(data.speech);
+      renderSteps(data.steps);
+      renderLatex(data.latex);
+      renderAnswer(data.answer);
+
+      // Build a synced lesson and run it
+      const lesson = buildLessonFromGemini(data);
+      // Adjust offsetMs if your avatar (or audio device) starts late/early
+      await startExactSyncedLesson(lesson, { offsetMs: 0 });
+
+    } catch (e) {
+      console.error(e);
+      alert('Network error.');
+      // Fallback: non-synced board write
+      // (comment out if you don't want fallback)
+      // clearBoard();
+      // if (data?.latex) addLatexToBoard(data.latex, { x: 40, y: 30 });
+      // if (data?.steps?.length) addStepsToBoard(data.steps, 140);
+      // if (data?.answer) addAnswerBadge(data.answer, 100);
+    } finally {
+      setThinking(false);
+    }
+  }
+
+  askBtn.addEventListener('click', () => {
+    const q = (qInput.value || '').trim();
+    if (!q) return;
+    askGemini(q);
+  });
+  qInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') askBtn.click();
+  });
+
+  document.addEventListener('DOMContentLoaded', initBoard);
+</script>
+
+
+          
+</body>
+
+</html>

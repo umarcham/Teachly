@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/logos/learning_10051578.png">
+    <link rel="icon" type="image/png" href="../assets/img/logos/learning_10051578.png">
+    <title>Teachly — Whiteboard Engine</title>
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,900" />
+    <!-- Handwriting Font for Whiteboard -->
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Kalam:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons & CSS -->
+    <link href="../assets/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link id="pagestyle" href="../assets/css/material-dashboard.css?v=3.2.0" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #f0f2f5;
+            overflow: hidden;
+            /* Prevent body scroll */
+            height: 100vh;
+        }
+
+        /* Layout Grid */
+        .app-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Controls Panel (Middle) */
+        .app-controls {
+            background: #f8f9fa;
+            border-right: 1px solid #eee;
+            padding: 1.25rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Stage (Right) */
+        .app-stage {
+            background: #e5e7eb;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Whiteboard */
+        .whiteboard-wrapper {
+            flex: 1;
+            background: #ffffff;
+            /* Dot grid pattern */
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 24px 24px;
+            padding: 3rem;
+            font-family: 'Kalam', cursive;
+            color: #2c3e50;
+            overflow-y: auto;
+            font-size: 1.6rem;
+            line-height: 1.6;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .wb-title {
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #1a1a1a;
+            text-decoration: underline;
+            text-decoration-color: #e91e63;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 8px;
+        }
+
+        .wb-step {
+            margin-bottom: 4rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            border-left: 5px solid transparent;
+            padding-left: 1.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .wb-step.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .wb-step.active-step {
+            border-left-color: #e91e63;
+        }
+
+        .wb-content {
+            white-space: pre-wrap;
+        }
+
+        /* ASCII Diagram Styling */
+        .wb-diagram {
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 2px solid #2c3e50;
+            font-size: 1.2rem;
+            line-height: 1.2;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-weight: bold;
+            color: #2c3e50;
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        .wb-highlights {
+            background: #fff8e1;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            border: 2px solid #ffc107;
+            margin-top: 1rem;
+            transform: rotate(-1deg);
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .wb-highlights ul {
+            margin: 0;
+            padding-left: 1rem;
+        }
+
+        /* Floating Video Player */
+        .floating-video {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 4px solid #fff;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .floating-video:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        video {
+            width: 100%;
+            display: block;
+            transform: scale(1.06);
+            /* Zoom to hide watermark */
+            transform-origin: right center;
+            /* Crop mainly from left */
+        }
+
+        /* Controls Styling */
+        .control-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+            border: 1px solid #eee;
+        }
+
+        .form-control:focus {
+            border-color: #e91e63;
+            box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.1);
+        }
+
+        .btn-primary,
+        .btn-dark,
+        .bg-gradient-dark {
+            box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- 1. Sidebar -->
+
+        <!-- 2. Controls Panel -->
+        <div class="app-controls">
+            <h5 class="font-weight-bolder mb-0">Class Setup</h5>
+            <p class="text-xs text-secondary mb-1">Configure your AI lesson.</p>
+
+            <!-- Topic Input -->
+            <div class="control-card">
+                <label class="form-label text-xs text-uppercase text-secondary font-weight-bolder">Topic</label>
+                <div class="input-group input-group-outline mb-2">
+                    <input type="text" id="topicInput" class="form-control" placeholder="e.g. Solve 2x - 4 = 10">
+                </div>
+                <button id="aiGenBtn" class="btn btn-dark w-100 btn-sm mb-0">
+                    <i class="material-symbols-rounded text-sm me-1">auto_awesome</i> Generate Script
+                </button>
+            </div>
+
+            <!-- Script Editor -->
+            <div class="control-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label
+                        class="form-label text-xs text-uppercase text-secondary font-weight-bolder mb-0">Script</label>
+                    <button id="parseBtn"
+                        class="btn btn-link text-dark p-0 text-xs text-uppercase font-weight-bold">Update
+                        Preview</button>
+                </div>
+                <textarea id="wbInput" class="form-control border p-2" rows="8"
+                    style="font-family: monospace; font-size: 0.8rem; background: #f8f9fa;"></textarea>
+            </div>
+
+            <!-- Presenter & Generate -->
+            <div class="control-card">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Choose Presenter</label>
+                    <select id="presenterSelect" class="form-select">
+                        <option value="" disabled selected>Loading presenters...</option>
+                    </select>
+                </div>
+
+                <!-- Voice Selection -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Choose Voice</label>
+                    <select id="voiceSelect" class="form-select">
+                        <option value="en-US-JennyNeural" selected>Jenny (US) - Female</option>
+                        <option value="" disabled>Loading voices...</option>
+                    </select>
+                </div>
+                <button id="generateBtn" class="btn bg-gradient-primary w-100 mb-2" disabled>
+                    <i class="material-symbols-rounded text-sm me-1">videocam</i> Start Class
+                </button>
+                <div id="status" class="text-xs text-center text-secondary font-weight-bold"></div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="control-card d-none" id="stepController">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-xs font-weight-bold text-uppercase">Playback</span>
+                    <div class="form-check form-switch ps-0 mb-0">
+                        <input class="form-check-input ms-auto" type="checkbox" id="autoPlayCheck" checked>
+                        <label class="form-check-label text-xs ms-2 mb-0" for="autoPlayCheck">Auto-Sync</label>
+                    </div>
+                </div>
+                <div class="btn-group w-100 btn-group-sm" role="group">
+                    <button id="prevStep" class="btn btn-outline-secondary"><i
+                            class="material-symbols-rounded">arrow_back</i></button>
+                    <button id="nextStep" class="btn btn-outline-secondary"><i
+                            class="material-symbols-rounded">arrow_forward</i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Stage (Whiteboard + Video) -->
+        <div class="app-stage">
+
+            <!-- Whiteboard Canvas -->
+            <div id="whiteboard" class="whiteboard-wrapper">
+                <div
+                    class="d-flex flex-column align-items-center justify-content-center h-100 text-secondary opacity-5">
+                    <i class="material-symbols-rounded text-6xl mb-3">draw</i>
+                    <p class="text-lg">Enter a topic to start the class.</p>
+                </div>
+            </div>
+
+            <!-- Floating Video -->
+            <div class="floating-video">
+                <video id="player" playsinline controls></video>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/js/core/popper.min.js"></script>
+    <script src="../assets/js/core/bootstrap.min.js"></script>
+    <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+    <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
+
+    <!-- App Logic -->
+    <script>
+        const wbInput = document.getElementById('wbInput');
+        const topicInput = document.getElementById('topicInput');
+        const aiGenBtn = document.getElementById('aiGenBtn');
+        const parseBtn = document.getElementById('parseBtn');
+        const whiteboard = document.getElementById('whiteboard');
+        const presenterSelect = document.getElementById('presenterSelect');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusEl = document.getElementById('status');
+        const player = document.getElementById('player');
+        const stepController = document.getElementById('stepController');
+        const nextStepBtn = document.getElementById('nextStep');
+        const prevStepBtn = document.getElementById('prevStep');
+        const autoPlayCheck = document.getElementById('autoPlayCheck');
+
+        let parsedSteps = [];
+        let currentStepIndex = -1;
+        let autoPlayInterval = null;
+
+        // 1. Load Presenters & Voices
+        async function loadData() {
+            try {
+                // Load Presenters
+                const pRes = await fetch('/api/presenters');
+                const pData = await pRes.json();
+                if (pData.presenters) {
+                    presenters = pData.presenters;
+                    presenterSelect.innerHTML = presenters.map(p => {
+                        const id = p.id || p.presenter_id;
+                        const image = p.image_url || p.preview_url || p.image_preview_url || '';
+                        const name = p.name || id;
+                        return `<option value="${id}" data-image="${image}">${name}</option>`;
+                    }).join('');
+                }
+
+                // Load Voices
+                const vRes = await fetch('/api/voices');
+                const vData = await vRes.json();
+                if (vData.ok && vData.voices) {
+                    voiceSelect.innerHTML = vData.voices.map(v => {
+                        const localeStr = v.locale ? ` (${v.locale})` : '';
+                        const genderStr = v.gender ? ` - ${v.gender}` : '';
+                        return `<option value="${v.voice_id}" ${v.voice_id === 'en-US-JennyNeural' ? 'selected' : ''}>
+                            ${v.name}${localeStr}${genderStr}
+                        </option>`;
+                    }).join('');
+                } else {
+                    // Fallback if API fails, keep default
+                    voiceSelect.innerHTML = `<option value="en-US-JennyNeural" selected>Jenny (US) - Female</option>`;
+                }
+
+            } catch (e) {
+                console.error(e);
+                statusEl.textContent = 'Error loading data.';
+            }
+        }
+        loadData();
+
+        // 2. Parse Logic
+        function parseScript(text) {
+            const lines = text.split('\n');
+            const steps = [];
+            let currentStep = null;
+            let title = null;
+
+            const isTitle = l => l.startsWith('WHITEBOARD_TITLE:');
+            const isStep = l => l.match(/^STEP_\d+:/);
+            const isDiagram = l => l.startsWith('DIAGRAM');
+            const isHighlights = l => l.startsWith('HIGHLIGHTS');
+
+            lines.forEach(line => {
+                const trimLine = line.trim();
+                if (isTitle(trimLine)) {
+                    title = trimLine.replace('WHITEBOARD_TITLE:', '').trim();
+                } else if (isStep(trimLine)) {
+                    if (currentStep) steps.push(currentStep);
+                    currentStep = { type: 'step', label: trimLine.replace(':', ''), content: [], diagram: [], highlights: [] };
+                } else if (isDiagram(trimLine)) {
+                    if (currentStep) currentStep.capturing = 'diagram';
+                } else if (isHighlights(trimLine)) {
+                    if (currentStep) currentStep.capturing = 'highlights';
+                } else {
+                    if (currentStep) {
+                        if (currentStep.capturing === 'diagram') {
+                            if (line.trim() !== '') currentStep.diagram.push(line);
+                        } else if (currentStep.capturing === 'highlights') {
+                            if (trimLine.startsWith('-')) currentStep.highlights.push(trimLine.replace('-', '').trim());
+                        } else {
+                            if (trimLine !== '') currentStep.content.push(trimLine);
+                        }
+                    }
+                }
+            });
+            if (currentStep) steps.push(currentStep);
+            return { title, steps };
+        }
+
+        function renderWhiteboard(data) {
+            whiteboard.innerHTML = '';
+            parsedSteps = data.steps;
+            currentStepIndex = -1;
+
+            if (data.title) {
+                const h1 = document.createElement('div');
+                h1.className = 'wb-title';
+                h1.textContent = data.title;
+                whiteboard.appendChild(h1);
+            }
+
+            data.steps.forEach((step, idx) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'wb-step';
+                stepDiv.id = `step-${idx}`;
+
+                if (step.content.length) {
+                    const p = document.createElement('div');
+                    p.className = 'wb-content';
+                    p.textContent = step.content.join('\n');
+                    stepDiv.appendChild(p);
+                }
+
+                if (step.diagram.length) {
+                    const pre = document.createElement('pre');
+                    pre.className = 'wb-diagram';
+                    pre.textContent = step.diagram.join('\n');
+                    stepDiv.appendChild(pre);
+                }
+
+                if (step.highlights.length) {
+                    const div = document.createElement('div');
+                    div.className = 'wb-highlights';
+                    const ul = document.createElement('ul');
+                    step.highlights.forEach(h => {
+                        const li = document.createElement('li');
+                        li.textContent = h;
+                        ul.appendChild(li);
+                    });
+                    div.appendChild(ul);
+                    stepDiv.appendChild(div);
+                }
+                whiteboard.appendChild(stepDiv);
+            });
+            generateBtn.disabled = false;
+        }
+
+        parseBtn.onclick = () => {
+            const data = parseScript(wbInput.value);
+            renderWhiteboard(data);
+        };
+
+        // 3. AI Generation
+        aiGenBtn.onclick = async () => {
+            const topic = topicInput.value.trim();
+            if (!topic) return alert('Please enter a topic');
+
+            aiGenBtn.disabled = true;
+            aiGenBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Thinking...';
+            wbInput.value = 'Generating script... please wait...';
+
+            try {
+                const res = await fetch('/api/generate-whiteboard-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: topic })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    wbInput.value = data.script;
+                    parseBtn.click();
+                } else {
+                    wbInput.value = 'Error: ' + data.error;
+                }
+            } catch (e) {
+                wbInput.value = 'Error: ' + e.message;
+            }
+            aiGenBtn.disabled = false;
+            aiGenBtn.innerHTML = '<i class="material-symbols-rounded text-sm me-1">auto_awesome</i> Generate Script';
+        };
+
+        // 4. Generate Video
+        generateBtn.onclick = async () => {
+            const presenterId = presenterSelect.value;
+            const voiceId = voiceSelect.value || 'en-US-JennyNeural';
+
+            if (!presenterId) return alert('Select a presenter');
+
+            // Helper to normalize math symbols for speech
+            const normalizeForSpeech = (text) => {
+                return text
+                    .replace(/\/\//g, '') // Ignore double slashes
+                    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
+                    .replace(/\*/g, ' multiplied by ')
+                    .replace(/\//g, ' divided by ')
+                    .replace(/\^/g, ' to the power of ')
+                    .replace(/=/g, ' equals ')
+                    .replace(/-/g, ' minus ')
+                    .replace(/\+/g, ' plus ')
+                    .replace(/²/g, ' power 2 ')
+                    .replace(/³/g, ' power 3 ');
+            };
+
+            // Construct full text for narration with normalization
+            let totalLength = 0;
+            const stepLengths = parsedSteps.map(s => {
+                const normalized = normalizeForSpeech(s.content.join(' '));
+                const len = normalized.length;
+                totalLength += len;
+                return { text: normalized, length: len };
+            });
+
+            const fullText = stepLengths.map(s => s.text).join(' . ');
+
+            // Calculate cumulative thresholds (0.0 to 1.0)
+            let accumulated = 0;
+            stepThresholds = stepLengths.map(s => {
+                const threshold = accumulated / totalLength;
+                accumulated += s.length;
+                return threshold;
+            });
+
+            statusEl.textContent = 'Generating video...';
+            generateBtn.disabled = true;
+
+            try {
+                const selectedOpt = presenterSelect.options[presenterSelect.selectedIndex];
+                const sourceUrl = selectedOpt.dataset.image;
+
+                const res = await fetch('/api/clip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        presenter_id: presenterId,
+                        source_url: sourceUrl,
+                        text: fullText,
+                        voice_id: voiceId
+                    })
+                });
+
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error);
+                pollStatus(data.clip.id);
+
+            } catch (e) {
+                statusEl.textContent = 'Error: ' + e.message;
+                generateBtn.disabled = false;
+            }
+        };
+
+        async function pollStatus(clipId) {
+            const res = await fetch(`/api/clip/${clipId}`);
+            const data = await res.json();
+
+            if (data.ok) {
+                const status = data.clip.status;
+                statusEl.textContent = `Status: ${status}...`;
+
+                if (status === 'done') {
+                    player.src = data.clip.result_url;
+                    player.load();
+                    player.playbackRate = 0.75; // Default speed 0.75x
+                    statusEl.textContent = 'Class is Live!';
+                    generateBtn.disabled = false;
+                    stepController.classList.remove('d-none');
+                    revealStep(0);
+
+                    if (autoPlayCheck.checked) player.play();
+
+                } else if (status === 'error' || status === 'failed') {
+                    statusEl.textContent = 'Generation Failed.';
+                    generateBtn.disabled = false;
+                } else {
+                    setTimeout(() => pollStatus(clipId), 2000);
+                }
+            }
+        }
+
+        // 5. Step Control & Sync
+        function revealStep(index) {
+            if (index < 0 || index >= parsedSteps.length) return;
+
+            parsedSteps.forEach((_, i) => {
+                const el = document.getElementById(`step-${i}`);
+                if (el) {
+                    if (i <= index) {
+                        el.classList.add('visible');
+                        if (i === index) el.classList.add('active-step');
+                        else el.classList.remove('active-step');
+                    } else {
+                        el.classList.remove('visible');
+                        el.classList.remove('active-step');
+                    }
+                }
+            });
+
+            const currentEl = document.getElementById(`step-${index}`);
+            if (currentEl && index > 0) {
+                currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            currentStepIndex = index;
+        }
+
+        nextStepBtn.onclick = () => revealStep(currentStepIndex + 1);
+        prevStepBtn.onclick = () => revealStep(currentStepIndex - 1);
+
+        player.ontimeupdate = () => {
+            if (!autoPlayCheck.checked || !player.duration || parsedSteps.length === 0) return;
+            const progress = player.currentTime / player.duration;
+
+            // Find the step where threshold <= progress
+            let targetStep = 0;
+            for (let i = stepThresholds.length - 1; i >= 0; i--) {
+                if (progress >= stepThresholds[i]) {
+                    targetStep = i;
+                    break;
+                }
+            }
+
+            if (targetStep !== currentStepIndex) {
+                revealStep(targetStep);
+            }
+        };
+
+    </script>
+</body>
+
+</html>
