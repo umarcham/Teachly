@@ -48,7 +48,7 @@ SESSIONS = {}
 
 PIXELBIN_CLOUD = os.getenv("PIXELBIN_CLOUD")  # e.g. cool-meadow-33b2a3
 PIXELBIN_KEY   = os.getenv("PIXELBIN_KEY") 
-TAVUS_API_KEY = "ef07fedc8f9d471ca204a042cacee0d0"  # set: export TAVUS_API_KEY="sk_..."
+TAVUS_API_KEY = "tavus_api_key"  # set: export TAVUS_API_KEY="sk_..."
 TAVUS_URL = "https://tavusapi.com/v2/conversations"   # your API Token
 
 if not DID_API_KEY:
