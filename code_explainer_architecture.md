@@ -6,6 +6,27 @@ It converts C code into a **JSON execution trace** that animates what happens in
 
 ---
 
+## Architecture Diagram (Mermaid)
+
+```mermaid
+flowchart TD
+    U[User C Code] --> FE[Frontend UI\nCode Editor + Step Player]
+    FE -->|POST /api/generate-trace| BE[Backend Trace Generator]
+
+    BE -->|Strict Schema Prompt| LLM[Gemini 2.0\nStructured Trace Engine]
+    LLM -->|JSON Execution Trace\n(createBox/updateBox/addArrow/stackFrame)| BE
+    BE --> FE
+
+    FE --> SIM[Time-Travel Simulator\nRebuild state from step 0]
+    SIM --> VIS[Memory Visualizer\nStack + Heap + Kernel Space]
+    VIS --> AR[Arrow Renderer\nSVG Bezier Curves]
+
+    BE --> META[Per-step Metadata\nComplexity + Placeholders]
+    META --> FE
+```
+
+---
+
 ## Core Concept: The Symbolic Trace
 > “The Code Explainer isn’t a simple line-by-line translator. I built it as a **Static Analysis Engine** that converts raw C code into a **JSON-based Execution Trace**.”
 
@@ -53,14 +74,14 @@ The output is a structured sequence of actions (like a “movie script”) that 
 ✅ This prevents free-form hallucinated explanations and forces the model to output only **visualizable state changes**.
 
 #### 2) Networking Knowledge (UNP-aware)
-Because students often use this for **Unix Network Programming**, I optimized the prompt to detect:
+Because the app is frequently used for **Unix Network Programming**, the prompt is optimized to detect:
 - `sockaddr_in`
 - `fork()`
 - `recvfrom()`
 - `sendto()`
 - file descriptors, sockets, ports
 
-These are mapped into a **Kernel Space** section in the memory view so students can see OS-managed resources clearly.
+These are mapped into a **Kernel Space** segment of the memory view so students can see OS-managed resources clearly.
 
 ---
 
@@ -71,17 +92,17 @@ A key design decision:
 > “Prev/Next does not just patch DOM state.”
 
 Instead, the frontend **re-simulates memory from step 0** up to the current step:
-- This avoids **state leak**
-- Ensures **reproducibility**
-- Guarantees correct rollback behavior
+- prevents **state leak**
+- ensures reproducibility
+- guarantees correct rollback behavior
 
 **Why this matters:**  
 If you go backwards, old values don’t remain stuck in UI by mistake.
 
 #### 2) Process Visualization (fork-aware)
 For `fork()`:
-- The trace creates separate **process groups**
-- Parent and child memory are visualized as:
+- the trace creates separate **process groups**
+- parent and child memory are visualized as:
   - cloned at fork
   - then independent after
 
@@ -98,9 +119,9 @@ Pointer operations generate actions like:
 - `addArrow(fromVar, toAddress)`
 
 Frontend behavior:
-- Calculate **bounding boxes**
-- Render **SVG Bezier curves**
-- Connect pointer variables → target memory blocks visually
+- compute bounding boxes of variables
+- render SVG Bezier curves
+- connect pointer variables → target memory blocks
 
 ✅ Students *see* pointer relationships instead of guessing.
 
@@ -108,10 +129,10 @@ Frontend behavior:
 For large buffers like:
 - `char buf[4096]`
 
-I added a truncation rule:
-- Show first **10 bytes**
-- Then show `...` to keep the UI clean  
-This maintains correctness while preventing UI overload.
+A truncation rule is applied:
+- show first **10 bytes**
+- then show `...` to keep UI clean  
+This maintains correctness while preventing overload.
 
 ---
 
@@ -126,19 +147,18 @@ Each step includes an estimated complexity tag such as:
 This teaches performance thinking alongside memory behavior.
 
 ### 2) Symbolic Execution for runtime-dependent values
-For values controlled by OS/runtime (e.g., ephemeral ports), the trace uses symbolic placeholders:
+For values controlled by OS/runtime (e.g., ephemeral ports), the engine uses placeholders:
 - `"Assigned Port"`
 - `"OS Allocated FD"`
 - `"Unknown runtime value"`
 
-This makes the trace sound without requiring a real compiler/runtime.
+This keeps the trace sound without requiring a real compiler.
 
 ### 3) UX / Animation
 The frontend animates stack frame push/pop with:
 - GSAP or CSS transitions
 
-This improves learning:
-- stack growth/shrink becomes visually intuitive.
+This makes stack behavior visually intuitive.
 
 ---
 
