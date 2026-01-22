@@ -10,19 +10,20 @@ It converts C code into a **JSON execution trace** that animates what happens in
 
 ```mermaid
 flowchart TD
-    U[User C Code] --> FE[Frontend UI\nCode Editor + Step Player]
+    U[User C Code] --> FE[Frontend UI: Code Editor + Step Player]
     FE -->|POST /api/generate-trace| BE[Backend Trace Generator]
 
-    BE -->|Strict Schema Prompt| LLM[Gemini 2.0\nStructured Trace Engine]
-    LLM -->|JSON Execution Trace\n(createBox/updateBox/addArrow/stackFrame)| BE
+    BE -->|Strict Schema Prompt| LLM[Gemini 2.0 Structured Trace Engine]
+    LLM -->|JSON Execution Trace: createBox, updateBox, addArrow, stackFrame| BE
     BE --> FE
 
-    FE --> SIM[Time-Travel Simulator\nRebuild state from step 0]
-    SIM --> VIS[Memory Visualizer\nStack + Heap + Kernel Space]
-    VIS --> AR[Arrow Renderer\nSVG Bezier Curves]
+    FE --> SIM[Time-Travel Simulator: rebuild from step 0]
+    SIM --> VIS[Memory Visualizer: Stack + Heap + Kernel Space]
+    VIS --> AR[Arrow Renderer: SVG Bezier Curves]
 
-    BE --> META[Per-step Metadata\nComplexity + Placeholders]
+    BE --> META[Per-step metadata: complexity + placeholders]
     META --> FE
+
 ```
 
 ---
