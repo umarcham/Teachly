@@ -10,22 +10,23 @@ It bridges **unstructured AI reasoning** and a **structured, reliable UI flow** 
 
 ```mermaid
 flowchart TD
-    U[User Topic / Question] --> FE[Frontend UI]
+    U[User Topic or Question] --> FE[Frontend UI]
     FE -->|POST /api/generate-whiteboard-script| BE[Flask Backend]
 
-    BE -->|System Prompt + DSL tags| LLM[Gemini 2.0\nWhiteboard Engine]
-    LLM -->|Tagged Script\nSTEP_n / DIAGRAM / HIGHLIGHTS| BE
+    BE -->|System prompt with DSL tags| LLM[Gemini 2.0 Whiteboard Engine]
+    LLM -->|Tagged script: STEP, DIAGRAM, HIGHLIGHTS| BE
     BE --> FE
 
-    FE --> PARSER[JS Parser\nRegex Tag Extraction]
-    PARSER --> STATE[State Objects Array\n{step, diagram, highlights}]
-    STATE --> RENDER[Whiteboard Renderer\nStep Cards + Dot Grid + Kalam Font]
+    FE --> PARSER[JS Parser: regex tag extraction]
+    PARSER --> STATE[Parsed state objects: steps, diagrams, highlights]
+    STATE --> RENDER[Whiteboard renderer: step cards + dot grid + Kalam]
 
-    FE --> DID[D-ID Avatar Video]
-    DID --> VIDEO[HTML5 Video Player]
+    FE --> DID[D-ID avatar video]
+    DID --> VIDEO[HTML5 video player]
 
-    VIDEO -->|ontimeupdate| SYNC[Sync Engine\nChar-Ratio Thresholds]
-    SYNC -->|Reveal Step| RENDER
+    VIDEO -->|ontimeupdate| SYNC[Sync engine: char-ratio thresholds]
+    SYNC -->|Reveal step| RENDER
+
 ```
 
 ---
